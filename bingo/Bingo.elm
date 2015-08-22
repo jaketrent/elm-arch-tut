@@ -2,6 +2,8 @@ module Bingo where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import StartApp.Simple as StartApp
 import String exposing (toUpper, repeat, trimRight)
 
 newEntry phrase points id =
@@ -21,6 +23,21 @@ initialModel =
       ]
   }
 
+type Action
+  = NoOp
+  | Sort
+  | Delete Int
+
+update action model =
+  case action of
+    NoOp -> model
+    Sort -> { model | entries <- List.sortBy .points model.entries }
+    Delete id ->
+      let
+        remainingEntries = List.filter (\entry -> entry.id /= id ) model.entries
+      in
+        { model | entries <- remainingEntries }
+
 title message times =
   message ++ " "
     |> toUpper
@@ -31,24 +48,30 @@ title message times =
 pageHeader =
   h1 [] [ title "bingo!" 3 ]
 
-entryItem entry =
+entryItem address entry =
   li [ ]
     [ span [ class "phrase" ] [ text entry.phrase ],
-      span [ class "points" ] [ text (toString entry.points) ]
+      span [ class "points" ] [ text (toString entry.points) ],
+      button [ class "delete", onClick address (Delete entry.id) ] [ ]
     ]
 
-entryList entries =
-  ul [] (List.map entryItem entries)
+entryList address entries =
+  ul [] (List.map (entryItem address) entries)
 
 pageFooter =
   footer [] [ a [ href "http://jaketrent.com" ] [ text "JakeTrent.com" ] ]
 
-view model =
+view address model =
   div [ id "container" ] [
     pageHeader,
-    entryList model.entries,
+    entryList address model.entries,
     pageFooter
   ]
 
 main =
-  view initialModel
+  StartApp.start { model = initialModel, update = update, view = view }
+
+
+
+
+
