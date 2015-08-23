@@ -10,7 +10,7 @@ newEntry phrase points id =
   {
     phrase = phrase,
     points = points,
-    wasSpoke = False,
+    wasSpoken = False,
     id = id
   }
 
@@ -27,6 +27,7 @@ type Action
   = NoOp
   | Sort
   | Delete Int
+  | Mark Int
 
 update action model =
   case action of
@@ -37,6 +38,13 @@ update action model =
         remainingEntries = List.filter (\entry -> entry.id /= id ) model.entries
       in
         { model | entries <- remainingEntries }
+    Mark id ->
+      let
+        updateEntry e =
+          if e.id == id then { e | wasSpoken <- (not e.wasSpoken) } else e
+      in
+        { model | entries <- List.map updateEntry model.entries }
+
 
 title message times =
   message ++ " "
@@ -49,7 +57,7 @@ pageHeader =
   h1 [] [ title "bingo!" 3 ]
 
 entryItem address entry =
-  li [ ]
+  li [ classList [ ("highlight", entry.wasSpoken) ], onClick address (Mark entry.id) ]
     [ span [ class "phrase" ] [ text entry.phrase ],
       span [ class "points" ] [ text (toString entry.points) ],
       button [ class "delete", onClick address (Delete entry.id) ] [ ]
