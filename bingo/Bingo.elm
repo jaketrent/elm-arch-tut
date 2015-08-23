@@ -3,17 +3,28 @@ module Bingo where
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Signal exposing (Address)
 import StartApp.Simple as StartApp
 import String exposing (toUpper, repeat, trimRight)
 
-newEntry phrase points id =
-  {
-    phrase = phrase,
-    points = points,
-    wasSpoken = False,
-    id = id
-  }
+type alias Entry = {
+  phrase: String,
+  points: Int,
+  wasSpoken: Bool,
+  id: Int
+}
 
+type alias Model = {
+  entries: List Entry
+}
+
+type Action
+  = NoOp
+  | Sort
+  | Delete Int
+  | Mark Int
+
+initialModel : Model
 initialModel =
   {
     entries =
@@ -23,12 +34,16 @@ initialModel =
       ]
   }
 
-type Action
-  = NoOp
-  | Sort
-  | Delete Int
-  | Mark Int
+newEntry : String -> Int -> Int -> Entry
+newEntry phrase points id =
+  {
+    phrase = phrase,
+    points = points,
+    wasSpoken = False,
+    id = id
+  }
 
+update : Action -> Model -> Model
 update action model =
   case action of
     NoOp -> model
@@ -45,7 +60,7 @@ update action model =
       in
         { model | entries <- List.map updateEntry model.entries }
 
-
+title : String -> Int -> Html
 title message times =
   message ++ " "
     |> toUpper
@@ -53,21 +68,25 @@ title message times =
     |> trimRight
     |> text
 
+pageHeader : Html
 pageHeader =
   h1 [] [ title "bingo!" 3 ]
 
+totalPoints : List Entry -> Int
 totalPoints entries =
   let
     spokenEntries = List.filter .wasSpoken entries
   in
     List.sum (List.map .points spokenEntries)
 
+totalItem : Int -> Html
 totalItem total =
   li [ class "total" ] [
     span [ class "label" ] [ text "Total" ],
     span [ class "points" ] [ text (toString total) ]
   ]
 
+entryItem : Address Action -> Entry -> Html
 entryItem address entry =
   li [ classList [ ("highlight", entry.wasSpoken) ], onClick address (Mark entry.id) ]
     [ span [ class "phrase" ] [ text entry.phrase ],
@@ -75,6 +94,7 @@ entryItem address entry =
       button [ class "delete", onClick address (Delete entry.id) ] [ ]
     ]
 
+entryList : Address Action -> List Entry -> Html
 entryList address entries =
   let
     entryItems = List.map (entryItem address) entries
@@ -82,9 +102,11 @@ entryList address entries =
   in
     ul [] items
 
+pageFooter : Html
 pageFooter =
   footer [] [ a [ href "http://jaketrent.com" ] [ text "JakeTrent.com" ] ]
 
+view : Address Action -> Model -> Html
 view address model =
   div [ id "container" ] [
     pageHeader,
@@ -92,6 +114,7 @@ view address model =
     pageFooter
   ]
 
+main : Signal Html
 main =
   StartApp.start { model = initialModel, update = update, view = view }
 
