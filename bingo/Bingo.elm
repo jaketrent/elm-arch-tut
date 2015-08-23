@@ -56,6 +56,18 @@ title message times =
 pageHeader =
   h1 [] [ title "bingo!" 3 ]
 
+totalPoints entries =
+  let
+    spokenEntries = List.filter .wasSpoken entries
+  in
+    List.sum (List.map .points spokenEntries)
+
+totalItem total =
+  li [ class "total" ] [
+    span [ class "label" ] [ text "Total" ],
+    span [ class "points" ] [ text (toString total) ]
+  ]
+
 entryItem address entry =
   li [ classList [ ("highlight", entry.wasSpoken) ], onClick address (Mark entry.id) ]
     [ span [ class "phrase" ] [ text entry.phrase ],
@@ -64,7 +76,11 @@ entryItem address entry =
     ]
 
 entryList address entries =
-  ul [] (List.map (entryItem address) entries)
+  let
+    entryItems = List.map (entryItem address) entries
+    items = entryItems ++ [ totalItem (totalPoints entries) ]
+  in
+    ul [] items
 
 pageFooter =
   footer [] [ a [ href "http://jaketrent.com" ] [ text "JakeTrent.com" ] ]
