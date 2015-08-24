@@ -1,7 +1,11 @@
 module Main where
 
-import Counter exposing (update, view)
+import CounterPair exposing (init, update, view)
 import StartApp.Simple exposing (start)
 
 main =
-  start { model = 0, update = update, view = view }
+  start {
+    model = init 0 0,
+    update = update,
+    view = view
+  }
